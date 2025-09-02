@@ -1,8 +1,8 @@
-import random
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import jit, prange, njit
-
+from numba import jit, njit, prange
+import statistics
+import random
 
 def zad1():
     g1 = lambda x: x
@@ -72,7 +72,6 @@ def zad1():
     plt.legend()
     plt.show()
 
-
 @jit
 def zad2_bins():
     T = 1000
@@ -80,36 +79,33 @@ def zad2_bins():
     for n in [10, 100, 1000]:
         arr_for_step = []
         for _ in range(T):
-            bins = np.zeros(n)
-            empty_bins = len(np.argwhere(bins))
+            binns = np.zeros(n)
+            empty_bins = len(np.argwhere(binns))
             num_of_steps = 0
             rng = np.random.default_rng()
             while empty_bins != n:
                 bin_num = rng.integers(low=0, high=n, size=1)
-                bins[bin_num] += 1
+                binns[bin_num] += 1
                 num_of_steps += 1
-                empty_bins = len(np.argwhere(bins))
+                empty_bins = len(np.argwhere(binns))
             arr_for_step.append(num_of_steps)
         arr_num_for_n.append(arr_for_step)
     return arr_num_for_n
 
 
-@jit
+@njit
 def zad3_bins():
     T = 1000
     arr_num_for_n = []
     for n in [10, 100, 1000]:
         arr_for_step = []
         for _ in range(T):
-            bins = np.zeros(n)
-            empty_bins = 0
+            binns = np.zeros(n)
             num_of_steps = 0
-            rng = np.random.default_rng()
-            while empty_bins != 1:
-                bin_num = rng.integers(low=0, high=n, size=1)
-                bins[bin_num] += 1
+            while (not (binns == 2).any()):
+                bin_num = random.randint(0, n - 1)
+                binns[bin_num] += 1
                 num_of_steps += 1
-                empty_bins = len(np.argwhere(bins == 2))
             arr_for_step.append(num_of_steps)
         arr_num_for_n.append(arr_for_step)
     return arr_num_for_n
@@ -119,70 +115,122 @@ def zad3_bins():
 def zad4():
     T = 1000
     arr_num_for_n = []
-    for m, n in [(1000, 1000), (100, 1000), (2000, 100)]:
+    for m, n in [(1000,1000), (100, 1000), (2000, 100)]:
         arr_for_step = []
         arr_of_numb_of_empty = []
         for _ in range(T):
-            bins = np.zeros(n)
+            binns = np.zeros(n)
             rng = np.random.default_rng()
             for _ in range(m):
                 bin_num = rng.integers(low=0, high=n, size=1)
-                bins[bin_num] += 1
-            arr_for_step.append(max(bins))
-            arr_of_numb_of_empty.append(len(np.argwhere(bins == 0)))
-        print("Average number of balls in the most loaded bin for m= " + str(m) + " and n= " + str(
-            n) + " is equal to: " + str(float(sum(arr_for_step)) / float(T)))
-        print("Average number of empty bins for m= " + str(m) + " and n= " + str(n) + " is equal to: " + str(
-            float(sum(arr_of_numb_of_empty)) / float(T)))
-        arr_num_for_n.append(sum(arr_for_step) / T)
+                binns[bin_num] += 1
+            arr_for_step.append(max(binns))
+            arr_of_numb_of_empty.append(len(np.argwhere(binns == 0)))
+        print("Average number of balls in the most loaded bin for m= "+str(m)+" and n= "+str(n)+" is equal to: "+ str(float(sum(arr_for_step))/float(T)))
+        print("Average number of empty bins for m= "+str(m)+" and n= "+str(n)+" is equal to: "+ str(float(sum(arr_of_numb_of_empty))/float(T)))
+        arr_num_for_n.append(sum(arr_for_step)/T)
     return arr_num_for_n
 
-
 @njit(parallel=True, fastmath=True)
-def approx_ec():
-    T = 100
+def approx_EC():
+    T = 10
     ec = []
-    for n in prange(10, 50001):
+    for n in prange(10,10001):
         arr_for_step = []
-        for _ in prange(T):
-            bins = np.zeros(n)
+        print(n)
+        for _ in range(T):
+            binns = np.zeros(n)
             num_of_steps = 0
-            while (bins == 0).any():
+            while (binns==0).any():
                 bin_num = random.randint(0, n - 1)
-                bins[bin_num] += 1
+                binns[bin_num] += 1
                 num_of_steps += 1
             arr_for_step.append(num_of_steps)
-        ec.append(sum(arr_for_step) / T)
+        ec.append(sum(arr_for_step)/T)
     return ec
 
+@njit
+def approx_EB():
+    T = 1000
+    EB = []
+    for n in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]:
+        arr_for_step = []
+        for _ in range(T):
+            binns = np.zeros(n)
+            num_of_steps = 0
+            while not (binns == 2).any():
+                bin_num = random.randint(0, n - 1)
+                binns[bin_num] += 1
+                num_of_steps += 1
+            arr_for_step.append(num_of_steps)
+        EB.append(sum(arr_for_step)/T)
+    return EB
 
 def zad2():
-    ec = approx_ec()
-    plt.plot(range(10, 50001), ec)
+    #ec = approx_EC()
+    with open('data.txt') as f:
+        arr = f.readlines()[0].split(', ')
+        data = []
+        for x in arr:
+            data.append(int(x))
+        print(type(data))
+        print(len(data))
+        print(data)
+    plt.plot([10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000], data)
+    plt.xscale('log')
     plt.show()
     arr = zad2_bins()
-    plt.hist(arr[0], bins=range(0, max(arr[0]) + 2, 2))
+    plt.hist(arr[0], bins=range(0, max(arr[0])+2, 2))
     plt.show()
-    plt.hist(arr[1], bins=range(0, max(arr[1]) + 20, 20))
+    plt.hist(arr[1], bins=range(0, max(arr[1])+20, 20))
     plt.show()
-    plt.hist(arr[2], bins=range(0, max(arr[2]) + 200, 200))
+    plt.hist(arr[2], bins=range(0, max(arr[2])+200, 200))
     plt.show()
+
+@njit
+def approx_EBbiba():
+    T = 1000
+    EB = []
+    d = 5000
+    for n in [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]:
+        print(n)
+        arr_for_step = []
+        for _ in range(T):
+            binns = np.zeros(n)
+            num_of_steps = 0
+            while not (binns == 2).any():
+                binns = BiBaModel(n,d,binns)
+                num_of_steps += 1
+            arr_for_step.append(num_of_steps)
+        EB.append(sum(arr_for_step)/T)
+    return EB
 
 
 def zad3():
+    data = approx_EB()
+    plt.plot([10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000], data)
+    plt.xscale('log')
+    plt.show()
     arr = zad3_bins()
-    plt.hist(arr[0], bins=10)
+    plt.hist(arr[0], bins=5)
     plt.show()
-    plt.hist(arr[1], bins=100)
+    plt.hist(arr[1], bins=25)
     plt.show()
-    plt.hist(arr[2], bins=1000)
+    plt.hist(arr[2], bins=200)
     plt.show()
 
 
-def biba_model(m, n, d, bins):
-    rng = np.random.default_rng()
-    bin_num = rng.integers(low=0, high=n, size=d)
-    min_v = m + 1
+@njit
+def BiBaModel(n,d, bins):
+    bin_num = []
+    n= n
+    d = d
+    bins = bins
+    for _ in range(d):
+        r = random.randint(0, n-1)
+        if r not in bin_num:
+            bin_num.append(r)
+    min_v = n+1
     min_idx = 0
     for b in bin_num:
         b_v = bins[b]
@@ -192,6 +240,5 @@ def biba_model(m, n, d, bins):
     bins[min_idx] += 1
     return bins
 
-
 if __name__ == '__main__':
-    approx_ec()
+    zad4()
