@@ -1,6 +1,9 @@
 # python_tasks
 
 
-testy i docstringi -> Statistics_stuff/LAB_3 maybe LAB_4
-fajne projekty -> complex systems LAB4 LAB5
+testy i docstringi -> Statistics_stuff
+
+ciekawe projekty -> Complex_systems LAB4 LAB5
+
+analiza danych -> Time_series_stuff
 
